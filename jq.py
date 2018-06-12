@@ -19,9 +19,8 @@ def init_jqdata():
     auth(phone_number, password)
 
 
-def get_price_data(security, middle_date):
-    """获取middle_date前后1年的日线行情数据,不包括停牌时期"""
-    start_date = middle_date - datetime.timedelta(weeks=52)
-    end_date = middle_date + datetime.timedelta(weeks=52)
-    df = get_price(security, start_date, end_date, skip_paused=True)
+def get_price_data(security):
+    """获取security的所有日线行情数据,不包括停牌时期"""
+    info = get_security_info(security)
+    df = get_price(security, info.start_date, info.end_date, skip_paused=True)
     return df
