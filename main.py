@@ -12,7 +12,6 @@ from jq import *
 
 
 all_logs = []
-date_tickers = []
 
 def parse_splitted_log(splitted_log):
     trade_time = datetime.datetime.strptime(splitted_log[0].strip(),'%Y-%m-%d %H:%M:%S')
@@ -27,24 +26,32 @@ def parse_splitted_log(splitted_log):
     return item
 
 
-def format_date(x,pos=None):
-    global date_tickers
-    if x<0 or x>len(date_tickers)-1:
-        return ''
-    return date_tickers[int(x)]
-
-
-def show_plot(data_list, xy):
+def show_plot(date_tickers, index, open, high, low, close, xy):
     fig, ax = plt.subplots()
     fig.subplots_adjust(bottom=0.2)
+
+    def format_date(x,pos=None):
+        if x<0 or x>len(date_tickers)-1:
+            return ''
+        return date_tickers[int(x)][2:]
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
+    ax.set_facecolor("black")
     plt.axis(xy)
     plt.xticks(rotation=45)
     plt.yticks()
     plt.title(all_logs[0]['security'] + " Daily Candlestick Chart") # FIXME
     plt.xlabel("Time")
     plt.ylabel("Price")
-    candlestick_ohlc(ax,data_list,width=0.6,colorup='r',colordown=(0.0, 1.0, 1.0))
+    candlestick_ohlc(ax,zip(index, open, high, low, close),width=0.6,colorup='r',colordown=(0.0, 1.0, 1.0))
+
+    height = xy[3] - xy[2]
+    arrow_len = height * 0.04 # arrow_len = head_length
+    for item in all_logs:
+        idx = find_time_index(date_tickers, item['trade_time'])
+        if item['buying']:
+            plt.arrow(idx, low[idx] - arrow_len * 2.2, 0, arrow_len, color='blue', width=0.4, head_length=arrow_len)
+        else:
+            plt.arrow(idx, high[idx] + arrow_len * 2.2, 0, - arrow_len, color='yellow', width=0.4, head_length=arrow_len)
     plt.grid()
     plt.show()
 
@@ -58,7 +65,6 @@ def find_time_index(list, item):
 
 
 def show_all_logs(latest_item = {}):
-    global date_tickers
     if (all_logs):
         df = get_price_data(all_logs[0]['security']) # FIXME
         date_tickers = [str(i).split(' ')[0] for i in df.index]
@@ -67,10 +73,6 @@ def show_all_logs(latest_item = {}):
             idx = find_time_index(date_tickers, latest_item['trade_time'])
             x1 = idx - 25
             x2 = idx + 15
-            if x1<0:
-                x1=0
-            if x2 >= n:
-                x2 = n - 1
         else:
             time_line = []
             for item in all_logs:
@@ -78,6 +80,13 @@ def show_all_logs(latest_item = {}):
             tmp = numpy.array(time_line)
             x1 = find_time_index(date_tickers, tmp.min())
             x2 = find_time_index(date_tickers, tmp.max())
+            x1 = x1 - 1
+            x2 = x2 + 1
+
+        if x1<0:
+            x1=0
+        if x2 >= n:
+            x2 = n - 1
 
         open = df['open']
         high = df['high']
@@ -94,7 +103,7 @@ def show_all_logs(latest_item = {}):
         y2 = numpy.array(high_list).max()
         y1 = y1 - (y2 - y1) * 0.12
         y2 = y2 + (y2 - y1) * 0.12
-        show_plot(zip(range(n), open, high, low, close), (x1, x2, y1, y2))
+        show_plot(date_tickers, range(n), open, high, low, close, (x1, x2, y1, y2))
     else:
         print('还没输入数据')
 
@@ -110,6 +119,8 @@ while True:
     else:
         log_line = input(prompt)
 
+    if not log_line:
+        continue
     if log_line == 'q':
         break
     if log_line == 'i':
