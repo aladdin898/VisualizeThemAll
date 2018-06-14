@@ -3,12 +3,8 @@
 import datetime
 import numpy
 
-import matplotlib.ticker as ticker
-import matplotlib.pyplot as plt
-
-from mpl_finance import candlestick_ohlc
-
 from jq import *
+from plot import show_plots
 
 
 all_logs = []
@@ -24,36 +20,6 @@ def parse_splitted_log(splitted_log):
     item = {'security' : security, 'buying' : buying, 'trade_time' : trade_time}
     all_logs.append(item)
     return item
-
-
-def show_plot(date_tickers, index, open, high, low, close, xy):
-    fig, ax = plt.subplots()
-    fig.subplots_adjust(bottom=0.2)
-
-    def format_date(x,pos=None):
-        if x<0 or x>len(date_tickers)-1:
-            return ''
-        return date_tickers[int(x)][2:]
-    ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-    ax.set_facecolor("black")
-    plt.axis(xy)
-    plt.xticks(rotation=45)
-    plt.yticks()
-    plt.title(all_logs[0]['security'] + " Daily Candlestick Chart") # FIXME
-    plt.xlabel("Time")
-    plt.ylabel("Price")
-    candlestick_ohlc(ax,zip(index, open, high, low, close),width=0.6,colorup='r',colordown=(0.0, 1.0, 1.0))
-
-    height = xy[3] - xy[2]
-    arrow_len = height * 0.04 # arrow_len = head_length
-    for item in all_logs:
-        idx = find_time_index(date_tickers, item['trade_time'])
-        if item['buying']:
-            plt.arrow(idx, low[idx] - arrow_len * 2.2, 0, arrow_len, color='blue', width=0.4, head_length=arrow_len)
-        else:
-            plt.arrow(idx, high[idx] + arrow_len * 2.2, 0, - arrow_len, color='yellow', width=0.4, head_length=arrow_len)
-    plt.grid()
-    plt.show()
 
 
 def find_time_index(list, item):
@@ -78,32 +44,22 @@ def show_all_logs(latest_item = {}):
             for item in all_logs:
                 time_line.append(item['trade_time'])
             tmp = numpy.array(time_line)
-            x1 = find_time_index(date_tickers, tmp.min())
-            x2 = find_time_index(date_tickers, tmp.max())
-            x1 = x1 - 1
-            x2 = x2 + 1
+            x1 = find_time_index(date_tickers, tmp.min()) - 1
+            x2 = find_time_index(date_tickers, tmp.max()) + 1
 
-        if x1<0:
-            x1=0
-        if x2 >= n:
-            x2 = n - 1
+        o = df['open']
+        h = df['high']
+        l = df['low']
+        c = df['close']
+        v = df['volume']
 
-        open = df['open']
-        high = df['high']
-        low = df['low']
-        close = df['close']
+        operations = []
+        for item in all_logs:
+            idx = find_time_index(date_tickers, item['trade_time'])
+            operations.append((idx, item['buying']))
 
-        high_list = []
-        low_list = []
-        for i in range(x1, x2):
-            high_list.append(high[i])
-            low_list.append(low[i])
-
-        y1 = numpy.array(low_list).min()
-        y2 = numpy.array(high_list).max()
-        y1 = y1 - (y2 - y1) * 0.12
-        y2 = y2 + (y2 - y1) * 0.12
-        show_plot(date_tickers, range(n), open, high, low, close, (x1, x2, y1, y2))
+        # FIXME
+        show_plots(all_logs[0]['security']+" Daily Candlestick Chart", date_tickers, o, h, l, c, operations, x1, x2, v)
     else:
         print('还没输入数据')
 
