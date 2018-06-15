@@ -29,35 +29,27 @@ def show_plots(title, date_tickers, o, h, l, c, operations, x1, x2, extra=[]):
     if x2d >= n:
         x2d = n - 1
 
-    high_list = []
-    low_list = []
-    for i in range(x1d, x2d):
-        high_list.append(h[i])
-        low_list.append(l[i])
-
-    ymin = numpy.array(low_list).min()
-    ymax = numpy.array(high_list).max()
+    ymin = numpy.array(l[x1d:x2d+1]).min()
+    ymax = numpy.array(h[x1d:x2d+1]).max()
     height = ymax - ymin
     y1main = ymin - height * 0.12
     y2main = ymax + height * 0.12
     arrow_len = height * 0.04 # arrow_len = head_length
 
+    fig = plt.figure()
     if len(extra) > 0:
-        fig, ax = plt.subplots(2, 1, True)
-        main_ax = ax[0]
+        grid = plt.GridSpec(3, 1, hspace=0.15)
 
-        ax[1].plot(range(n), extra)
-        extra_high_list = []
-        extra_low_list = []
-        for j in range(x1d, x2d):
-            extra_high_list.append(extra[j])
-            extra_low_list.append(extra[j])
-        y1extra = numpy.array(extra_low_list).min()
-        y2extra = numpy.array(extra_high_list).max()
-        ax[1].axis(ymin=y1extra,ymax=y2extra)
+        main_ax = plt.subplot(grid[0:2,0])
+        main_ax.xaxis.set_visible(False)
+        extra_ax = plt.subplot(grid[2,0], sharex=main_ax)
+
+        extra_ax.plot(range(n), extra)
+        y1extra = numpy.array(extra[x1d:x2d+1]).min()
+        y2extra = numpy.array(extra[x1d:x2d+1]).max()
+        extra_ax.axis(ymin=y1extra,ymax=y2extra)
     else:
-        fig, ax = plt.subplots(1, 1, True)
-        main_ax = ax
+        main_ax = plt.subplot(111)
     fig.subplots_adjust(bottom=0.2)
 
     plot_main(main_ax, n, o, h, l, c, operations, arrow_len)
@@ -72,9 +64,7 @@ def show_plots(title, date_tickers, o, h, l, c, operations, x1, x2, extra=[]):
 
     plt.xticks(rotation=45)
     plt.yticks()
-    plt.title(title)
-    plt.xlabel("Time")
-    main_ax.set_ylabel("Price")
+    main_ax.set_title(title)
 
     plt.grid()
     plt.show()
