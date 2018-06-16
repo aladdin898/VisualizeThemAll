@@ -19,7 +19,24 @@ def plot_main(ax, n, o, h, l, c, operations, arrow_len):
             ax.arrow(x, h[x] + arrow_len * 2.2, 0, - arrow_len, color='yellow', width=0.4, head_length=arrow_len)
 
 
-def show_plots(title, date_tickers, o, h, l, c, operations, x1, x2, extra=[]):
+def plot_volume(ax, n, v):
+    c=[]
+    ec=[]
+    for i in range(n):
+        if i == 0:
+            c.append('black')
+            ec.append('red')
+        else:
+            if v[i] > v[i - 1]:
+                c.append('black')
+                ec.append('red')
+            else:
+                c.append((0.0, 1.0, 1.0))
+                ec.append((0.0, 1.0, 1.0))
+    ax.bar(range(n), v, color=c, edgecolor=ec)
+
+
+def show_plots(title, date_tickers, o, h, l, c, v, operations, x1, x2, extra=[]):
     n = len(date_tickers)
     # x1,x2为横轴显示范围, x1d,x2d为横轴数据索引范围(0~n-1)
     x1d=x1
@@ -37,19 +54,9 @@ def show_plots(title, date_tickers, o, h, l, c, operations, x1, x2, extra=[]):
     arrow_len = height * 0.04 # arrow_len = head_length
 
     fig = plt.figure()
-    if len(extra) > 0:
-        grid = plt.GridSpec(3, 1, hspace=0.15)
-
-        main_ax = plt.subplot(grid[0:2,0])
-        main_ax.xaxis.set_visible(False)
-        extra_ax = plt.subplot(grid[2,0], sharex=main_ax)
-
-        extra_ax.plot(range(n), extra)
-        y1extra = numpy.array(extra[x1d:x2d+1]).min()
-        y2extra = numpy.array(extra[x1d:x2d+1]).max()
-        extra_ax.axis(ymin=y1extra,ymax=y2extra)
-    else:
-        main_ax = plt.subplot(111)
+    grid = plt.GridSpec(3, 1, hspace=0.15)
+    main_ax = plt.subplot(grid[0:2,0])
+    extra_ax = plt.subplot(grid[2,0], sharex=main_ax)
     fig.subplots_adjust(bottom=0.2)
 
     plot_main(main_ax, n, o, h, l, c, operations, arrow_len)
@@ -57,14 +64,28 @@ def show_plots(title, date_tickers, o, h, l, c, operations, x1, x2, extra=[]):
     def format_date(x,pos=None):
         if x<0 or x>len(date_tickers)-1:
             return ''
-        return date_tickers[int(x)][2:]
+        return date_tickers[int(x-0.5)][2:]
+    main_ax.xaxis.set_visible(False)
     main_ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-    main_ax.set_facecolor("black")
     main_ax.axis((x1,x2,y1main,y2main))
+    main_ax.set_facecolor("black")
+    main_ax.set_title(title)
+
+    # 如extra有数据, 则绘制在副图上, 否则把成交量绘制在副图上
+    if len(extra) > 0:
+        extra_ax.plot(range(n), extra)
+        y1extra = numpy.array(extra[x1d:x2d+1]).min()
+        y2extra = numpy.array(extra[x1d:x2d+1]).max()
+    else:
+        plot_volume(extra_ax, n, v)
+        y1extra = 0.0
+        y2extra = numpy.array(v[x1d:x2d+1]).max() * 1.08
+        extra_ax.set_ylabel("Volume")
+    extra_ax.axis(ymin=y1extra,ymax=y2extra)
+    extra_ax.set_facecolor("black")
 
     plt.xticks(rotation=45)
     plt.yticks()
-    main_ax.set_title(title)
 
     plt.grid()
     plt.show()

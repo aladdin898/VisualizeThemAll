@@ -32,7 +32,8 @@ def find_time_index(list, item):
 
 def show_all_logs(latest_item = {}):
     if (all_logs):
-        df = get_price_data(all_logs[0]['security']) # FIXME
+        security = all_logs[0]['security'] # FIXME
+        df = get_price_data(security)
         date_tickers = [str(i).split(' ')[0] for i in df.index]
         n = len(date_tickers)
         if latest_item:
@@ -58,8 +59,7 @@ def show_all_logs(latest_item = {}):
             idx = find_time_index(date_tickers, item['trade_time'])
             operations.append((idx, item['buying']))
 
-        # FIXME
-        show_plots(all_logs[0]['security']+" Daily Candlestick Chart", date_tickers, o, h, l, c, operations, x1, x2, v)
+        show_plots(security+" Daily Candlestick Chart", date_tickers, o, h, l, c, v, operations, x1, x2)
     else:
         print('还没输入数据')
 
