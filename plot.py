@@ -9,7 +9,7 @@ from mpl_finance import candlestick_ohlc
 
 
 def plot_main(ax, n, o, h, l, c, operations, arrow_len):
-    candlestick_ohlc(ax,zip(range(n), o, h, l, c),width=0.6,colorup='r',colordown=(0.0, 1.0, 1.0))
+    candlestick_ohlc(ax,zip(range(n), o, h, l, c),width=0.6,colorup='red',colordown='cyan')
 
     for operation in operations:
         x = operation[0]
@@ -31,8 +31,8 @@ def plot_volume(ax, n, v):
                 c.append('black')
                 ec.append('red')
             else:
-                c.append((0.0, 1.0, 1.0))
-                ec.append((0.0, 1.0, 1.0))
+                c.append('cyan')
+                ec.append('cyan')
     ax.bar(range(n), v, color=c, edgecolor=ec)
 
 
@@ -67,7 +67,7 @@ def show_plots(title, date_tickers, o, h, l, c, v, operations, x1, x2, extra=[])
         return date_tickers[int(x-0.5)][2:]
     main_ax.xaxis.set_visible(False)
     main_ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
-    main_ax.axis((x1,x2,y1main,y2main))
+    main_ax.axis((x1-0.5,x2+0.5,y1main,y2main))
     main_ax.set_facecolor("black")
     main_ax.set_title(title)
 
