@@ -5,18 +5,23 @@ import numpy
 import matplotlib.ticker as ticker
 import matplotlib.pyplot as plt
 
-from mpl_finance import candlestick_ohlc
+from mpl_finance import candlestick2_ohlc
 
 
 def plot_main(ax, n, o, h, l, c, operations, arrow_len):
-    candlestick_ohlc(ax,zip(range(n), o, h, l, c),width=0.6,colorup='red',colordown='cyan')
+    candlestick2_ohlc(ax, o, h, l, c, width=0.6, colorup='red', colordown='cyan', alpha=1.0)
 
     for operation in operations:
         x = operation[0]
         if operation[1]:
-            ax.arrow(x, l[x] - arrow_len * 2.2, 0, arrow_len, color='white', width=0.4, head_length=arrow_len)
+            y = l[x] - arrow_len * 2.2
+            dy = arrow_len
+            clr='white'
         else:
-            ax.arrow(x, h[x] + arrow_len * 2.2, 0, - arrow_len, color='yellow', width=0.4, head_length=arrow_len)
+            y = h[x] + arrow_len * 2.2
+            dy = - arrow_len
+            clr='yellow'
+        ax.arrow(x, y, 0, dy, color=clr, width=0.4, head_length=arrow_len)
 
 
 def plot_volume(ax, n, v):
